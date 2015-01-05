@@ -10,7 +10,7 @@ var NORX = {}
 
 var INFO = [
 	'NORX.init: Parameter R set to default 4.',
-	'NORX.init: Parameter A set to default 128.'
+	'NORX.init: Parameter A set to default 4.'
 ]
 
 var ERROR = [
@@ -168,7 +168,7 @@ NORX.init = function(r, a) {
 		console.info(INFO[0])
 	}
 	if (isNumber(a) && (a > 0) && (a <= (10 * PARAMS.W))) {
-		PARAMS.A = a
+		PARAMS.A = PARAMS.W * a
 	}
 	else {
 		PARAMS.A = PARAMS.W * 4

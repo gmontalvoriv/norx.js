@@ -1,4 +1,4 @@
-// JavaScript implementation of the NORX authenticated encryption cipher.
+// JavaScript implementation of the NORX authenticated stream cipher.
 // Written by Nadim Kobeissi, 2015 <nadim@nadim.computer>.
 // License: CC0.
 

@@ -70,11 +70,11 @@ var OPER = {
 }
 
 var isNumber = function(x) {
-	return ((typeof(x) === 'number') ? true : false)
+	return typeof x === 'number'
 }
 
 var isDefined = function(x) {
-	return ((typeof(x)).match(/undefined/) ? false : true)
+	return typeof x !== 'undefined'
 }
 
 var initializeState = function(k, n) {

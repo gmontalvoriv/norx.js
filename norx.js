@@ -149,7 +149,6 @@ var selfTest = function() {
 	else {
 		return false
 	}
-	// @todo: Also add decryption test.
 }
 
 NORX.init = function(r, a) {
@@ -197,47 +196,45 @@ NORX.encrypt = function(k, n, h, p, t) {
 		h = applyPad(h)
 		for (var i = 0; i < (h.length / 10); i++) {
 			for (var j = 0; j < 10; j++) {
-				S[j] ^= h[j]
+				S[j] ^= h[j + (i * 10)]
 			}
+			if (isDefined(p) && p.length) {
+				S[15] ^= 0x00000002
+			}
+			else if (isDefined(t) && t.length) {
+				S[15] ^= 0x00000004
+			}
+			else {
+				S[15] ^= 0x00000008
+			}
+			OPER.F(PARAMS.R, S)
 		}
-		if (isDefined(p) && p.length) {
-			S[15] ^= 0x00000002
-		}
-		else if (isDefined(t) && t.length) {
-			S[15] ^= 0x00000004
-		}
-		else {
-			S[15] ^= 0x00000008
-		}
-		OPER.F(PARAMS.R, S)
 	}
 	if (isDefined(p) && p.length) {
 		p = applyPad(p)
-		var cc = 0
 		for (var i = 0; i < (p.length / 10); i++) {
 			for (var j = 0; j < 10; j++) {
-				S[j]    ^= p[j]
-				c[cc++]  = S[j]
+				S[j]    ^= p[j + (i * 10)]
+				c[j + (i * 10)]  = S[j]
 			}
+			if (isDefined(t) && t.length) {
+				S[15] ^= 0x00000004
+			}
+			else {
+				S[15] ^= 0x00000008
+			}
+			OPER.F(PARAMS.R, S)
 		}
-		c = c.subarray(0, (10 - (p.length % 10)))
-		if (isDefined(t) && t.length) {
-			S[15] ^= 0x00000004
-		}
-		else {
-			S[15] ^= 0x00000008
-		}
-		OPER.F(PARAMS.R, S)
 	}
 	if (isDefined(t) && t.length) {
 		t = applyPad(t)
 		for (var i = 0; i < (t.length / 10); i++) {
 			for (var j = 0; j < 10; j++) {
-				S[j] ^= t[j]
+				S[j] ^= t[j + (i * 10)]
 			}
+			S[15] ^= 0x00000008
+			OPER.F(PARAMS.R, S)
 		}
-		S[15] ^= 0x00000008
-		OPER.F(PARAMS.R, S)
 	}
 	(function() {
 		OPER.F(PARAMS.R, S)
@@ -249,10 +246,7 @@ NORX.encrypt = function(k, n, h, p, t) {
 	}
 }
 
-NORX.decrypt = function() {
-	// @todo
-}
-
 })()
+
 
 NORX.init()

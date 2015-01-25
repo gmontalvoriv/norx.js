@@ -134,9 +134,6 @@ var selfTest = function() {
 	])
 	var t = new Uint32Array([])
 	var e = NORX.encrypt(k, n, h, p, t)
-	var d = NORX.decrypt(
-		k, n, h, e.c, t, e.t
-	)
 	if (
 		(e.c[0] === 0x1F8F35CD) &&
 		(e.c[1] === 0xCAFA2A38) &&
@@ -145,18 +142,14 @@ var selfTest = function() {
 		(e.t[0] === 0x7702CA8A) &&
 		(e.t[1] === 0xE8BA5210) &&
 		(e.t[2] === 0xFD9B73AD) &&
-		(e.t[3] === 0xC0443A0D) &&
-		(d.t    ===       true) &&
-		(d.p[0] === 0x80000007) &&
-		(d.p[1] === 0x60000005) &&
-		(d.p[2] === 0x40000003) &&
-		(d.p[3] === 0x20000001)
+		(e.t[3] === 0xC0443A0D)
 	) {
 		return true
 	}
 	else {
 		return false
 	}
+	// @todo: Also add decryption test.
 }
 
 NORX.init = function(r, a) {
@@ -204,45 +197,47 @@ NORX.encrypt = function(k, n, h, p, t) {
 		h = applyPad(h)
 		for (var i = 0; i < (h.length / 10); i++) {
 			for (var j = 0; j < 10; j++) {
-				S[j] ^= h[j + (i * 10)]
+				S[j] ^= h[j]
 			}
-			if (isDefined(p) && p.length) {
-				S[15] ^= 0x00000002
-			}
-			else if (isDefined(t) && t.length) {
-				S[15] ^= 0x00000004
-			}
-			else {
-				S[15] ^= 0x00000008
-			}
-			OPER.F(PARAMS.R, S)
 		}
+		if (isDefined(p) && p.length) {
+			S[15] ^= 0x00000002
+		}
+		else if (isDefined(t) && t.length) {
+			S[15] ^= 0x00000004
+		}
+		else {
+			S[15] ^= 0x00000008
+		}
+		OPER.F(PARAMS.R, S)
 	}
 	if (isDefined(p) && p.length) {
 		p = applyPad(p)
+		var cc = 0
 		for (var i = 0; i < (p.length / 10); i++) {
 			for (var j = 0; j < 10; j++) {
-				S[j]    ^= p[j + (i * 10)]
-				c[j + (i * 10)]  = S[j]
+				S[j]    ^= p[j]
+				c[cc++]  = S[j]
 			}
-			if (isDefined(t) && t.length) {
-				S[15] ^= 0x00000004
-			}
-			else {
-				S[15] ^= 0x00000008
-			}
-			OPER.F(PARAMS.R, S)
 		}
+		c = c.subarray(0, (10 - (p.length % 10)))
+		if (isDefined(t) && t.length) {
+			S[15] ^= 0x00000004
+		}
+		else {
+			S[15] ^= 0x00000008
+		}
+		OPER.F(PARAMS.R, S)
 	}
 	if (isDefined(t) && t.length) {
 		t = applyPad(t)
 		for (var i = 0; i < (t.length / 10); i++) {
 			for (var j = 0; j < 10; j++) {
-				S[j] ^= t[j + (i * 10)]
+				S[j] ^= t[j]
 			}
-			S[15] ^= 0x00000008
-			OPER.F(PARAMS.R, S)
 		}
+		S[15] ^= 0x00000008
+		OPER.F(PARAMS.R, S)
 	}
 	(function() {
 		OPER.F(PARAMS.R, S)
@@ -254,7 +249,10 @@ NORX.encrypt = function(k, n, h, p, t) {
 	}
 }
 
-})()
+NORX.decrypt = function() {
+	// @todo
+}
 
+})()
 
 NORX.init()

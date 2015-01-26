@@ -134,6 +134,9 @@ var selfTest = function() {
 	])
 	var t = new Uint32Array([])
 	var e = NORX.encrypt(k, n, h, p, t)
+	var d = NORX.decrypt(
+		k, n, h, e.c, t, e.t
+	)
 	if (
 		(e.c[0] === 0x1F8F35CD) &&
 		(e.c[1] === 0xCAFA2A38) &&
@@ -142,7 +145,12 @@ var selfTest = function() {
 		(e.t[0] === 0x7702CA8A) &&
 		(e.t[1] === 0xE8BA5210) &&
 		(e.t[2] === 0xFD9B73AD) &&
-		(e.t[3] === 0xC0443A0D)
+		(e.t[3] === 0xC0443A0D) &&
+		(d.t    ===       true) &&
+		(d.p[0] === 0x80000007) &&
+		(d.p[1] === 0x60000005) &&
+		(d.p[2] === 0x40000003) &&
+		(d.p[3] === 0x20000001)
 	) {
 		return true
 	}
@@ -244,6 +252,103 @@ NORX.encrypt = function(k, n, h, p, t) {
 		c: c,
 		t: tag
 	}
+}
+
+NORX.decrypt = function(k, n, h, c, t, a) {
+	var p   = new Uint32Array(c.length)
+	var tag = new Uint32Array(PARAMS.A / PARAMS.W)
+	if (!PARAMS.R || !PARAMS.A) {
+		throw new Error(ERROR[0])
+		return false
+	}
+	if (k.length !== (PARAMS.W / 8)) {
+		throw new Error(ERROR[2])
+		return false
+	}
+	if (n.length !== (PARAMS.W / 16)) {
+		throw new Error(ERROR[3])
+		return false
+	}
+	var S = initializeState(k, n)
+	if (isDefined(h) && h.length) {
+		h = applyPad(h)
+		for (var i = 0; i < (h.length / 10); i++) {
+			for (var j = 0; j < 10; j++) {
+				S[j] ^= h[j + (i * 10)]
+			}
+			if (isDefined(c) && c.length) {
+				S[15] ^= 0x00000002
+			}
+			else if (isDefined(t) && t.length) {
+				S[15] ^= 0x00000004
+			}
+			else {
+				S[15] ^= 0x00000008
+			}
+			OPER.F(PARAMS.R, S)
+		}
+	}
+	if (isDefined(c) && c.length) {
+		var cL = c.length
+		c = applyPad(c)
+		cL = 10 - (c.length - cL)
+		for (var i = 0; i < (c.length / 10); i++) {
+			for (var j = 0; j < 10; j++) {
+				p[j + (i * 10)] = S[j] ^ c[j + (i * 10)]
+				if (
+					(i === (c.length / 10) - 1) &&
+					(j >= cL)
+				) {
+					S[j] ^= c[j + (i * 10)]
+				}
+				else {
+					S[j] = c[j + (i * 10)]
+				}
+			}
+			if (t.length) {
+				S[15] ^= 0x00000004
+			}
+			else {
+				S[15] ^= 0x00000008
+			}
+			OPER.F(PARAMS.R, S)
+		}
+	}
+	if (isDefined(t) && t.length) {
+		t = applyPad(t)
+		for (var i = 0; i < (t.length / 10); i++) {
+			for (var j = 0; j < 10; j++) {
+				S[j] ^= t[j + (i * 10)]
+			}
+			S[15] ^= 0x00000008
+			OPER.F(PARAMS.R, S)
+		}
+	}
+	(function() {
+		OPER.F(PARAMS.R, S)
+		tag.set(S.subarray(0, PARAMS.A / PARAMS.W), 0)
+	})()
+	return (function() {
+		if (a.length !== tag.length) {
+			return false
+		}
+		var comp = 0
+		for (var i = 0; i < tag.length; i++) {
+			comp |= a[i] ^ tag[i]
+		}
+		if (comp === 0) {
+			return {
+				p: p,
+				t: true
+			}
+		}
+		else {
+			return {
+				p: new Uint32Array(),
+				t: false
+			}
+		}
+	})()
 }
 
 })()

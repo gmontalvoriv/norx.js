@@ -70,11 +70,11 @@ var OPER = {
 }
 
 var isNumber = function(x) {
-	return typeof x === 'number'
+	return (typeof(x) === 'number')
 }
 
 var isDefined = function(x) {
-	return typeof x !== 'undefined'
+	return (typeof(x) !== 'undefined')
 }
 
 var initializeState = function(k, n) {
@@ -112,7 +112,7 @@ var applyPad = function(bytes) {
 		bytes.length + (10 - (bytes.length % 10))
 	)
 	pad.set(bytes, 0)
-	pad[  bytes.length] = 0x00000001
+	pad[bytes.length  ] = 0x00000001
 	pad[pad.length - 1] = 0x80000000
 	return pad
 }
@@ -292,19 +292,19 @@ NORX.decrypt = function(k, n, h, c, t, a) {
 		var cL = c.length
 		c = applyPad(c)
 		cL = 10 - (c.length - cL)
-		for (var i = 0; i < (c.length / 10); i++) {
-			for (var j = 0; j < 10; j++) {
-				p[j + (i * 10)] = S[j] ^ c[j + (i * 10)]
-				if (
-					(i === (c.length / 10) - 1) &&
-					(j >= cL)
-				) {
-					S[j] ^= c[j + (i * 10)]
-				}
-				else {
-					S[j] = c[j + (i * 10)]
-				}
+		for (var i = j = 0; i < (c.length / 10); j++) {
+			p[j + (i * 10)] = S[j] ^ c[j + (i * 10)]
+			if (
+				(i === (c.length / 10) - 1) &&
+				(j >= cL)
+			) {
+				S[j] ^= c[j + (i * 10)]
 			}
+			else {
+				S[j]  = c[j + (i * 10)]
+			}
+			if (j < 10) { continue   }
+			else        { j = 0; i++ }
 			if (t.length) {
 				S[15] ^= 0x00000004
 			}
@@ -337,16 +337,10 @@ NORX.decrypt = function(k, n, h, c, t, a) {
 			comp |= a[i] ^ tag[i]
 		}
 		if (comp === 0) {
-			return {
-				p: p,
-				t: true
-			}
+			return { p: p, t: true }
 		}
 		else {
-			return {
-				p: new Uint32Array(),
-				t: false
-			}
+			return { p: new Uint32Array(), t: false }
 		}
 	})()
 }

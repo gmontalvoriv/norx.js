@@ -23,7 +23,7 @@ Currently, `norx.js` provides:
 3. `NORX.encrypt` will return an object containing:
 	1. `c` (`Uint32Array`) the ciphertext.
 	2. `t` (`Uint32Array`) the authentication tag.
-4. Decrypt using `NORX.encrypt(k, n, h, c, t, a)`:
+4. Decrypt using `NORX.decrypt(k, n, h, c, t, a)`:
 	1. `k` (required `Uint32Array`) is the 128 bit encryption key.
 	2. `n` (required `Uint32Array`) is the 64 bit nonce.
 	3. `h` (required `Uint32Array`) is the header (can be empty).
